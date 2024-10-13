@@ -3,19 +3,39 @@ package handlers
 import (
 	"calorie-tracker/models"
 	"context"
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 )
 
 var ingredientCollection *mongo.Collection
 
 func SetUpIngredientCollection(client *mongo.Client) {
-    ingredientCollection = client.Database("calorieTracker").Collection("ingredients")
+    ingredientCollection = client.Database("calorieTracker").Collection("meals", &options.CollectionOptions{
+        WriteConcern: writeconcern.New(writeconcern.W(1)),
+    })
 
+    // Create a unique index on the "name" field
+    indexModel := mongo.IndexModel{
+        Keys:    map[string]interface{}{"name": 1}, // Ascending index on "name"
+        Options: options.Index().SetUnique(true),  // Ensure the name is unique
+    }
+
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    // Create the index
+    if _, err := mealCollection.Indexes().CreateOne(ctx, indexModel); err != nil {
+        log.Fatalf("Failed to create index: %v", err)
+    }
+
+    log.Println("Meal collection set up with unique index on 'name' field")
 }
 
 func CreateIngredient(c *fiber.Ctx) error {

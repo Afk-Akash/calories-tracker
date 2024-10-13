@@ -47,6 +47,20 @@ func CreateMeal(c *fiber.Ctx) error {
             "error": "Invalid request body",
         })
     }
+
+    var totalCalories, totalFat, totalCarbs, totalProtien float64
+    for i := 0; i < len(meal.Ingredients); i++ {
+        totalCalories = totalCalories + meal.Ingredients[i].Calories
+        totalProtien  = totalProtien + meal.Ingredients[i].Protein
+        totalCarbs    = totalCarbs + meal.Ingredients[i].Carbs
+        totalFat      = totalFat + meal.Ingredients[i].Fat
+    }
+
+    meal.TotalCalories = totalCalories
+    meal.TotalProtien  = totalProtien
+    meal.TotalCarbs    = totalCarbs
+    meal.TotalFat      = totalFat
+
     objectId, _ := primitive.ObjectIDFromHex(userID)
     meal.UserID = objectId
     meal.CreatedAt = primitive.NewDateTimeFromTime(time.Now())

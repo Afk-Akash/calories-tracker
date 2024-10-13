@@ -31,11 +31,11 @@ func SetUpIngredientCollection(client *mongo.Client) {
     defer cancel()
 
     // Create the index
-    if _, err := mealCollection.Indexes().CreateOne(ctx, indexModel); err != nil {
+    if _, err := ingredientCollection.Indexes().CreateOne(ctx, indexModel); err != nil {
         log.Fatalf("Failed to create index: %v", err)
     }
 
-    log.Println("Meal collection set up with unique index on 'name' field")
+    log.Println("ingredients collection set up with unique index on 'name' field")
 }
 
 func CreateIngredient(c *fiber.Ctx) error {

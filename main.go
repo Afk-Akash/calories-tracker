@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"calorie-tracker/handlers" // Adjust this import path as necessary
@@ -31,9 +32,14 @@ func main() {
     log.Println("Connected to MongoDB!")
 
     // Set up the user collection
+    log.Println("creating userDatabase and collection")
     handlers.SetUpUserCollection(client)
+    log.Println("creating database Ingredient and collection")
 	handlers.SetUpIngredientCollection(client)
+    log.Println("creating database meal and collection")
     handlers.SetUpMealCollection(client)
+    log.Println("creating database daily log tracker and collection")
+    handlers.SetUpDailyLogCollection(client)
 
     // Define routes
     app.Post("/register", handlers.Register)
@@ -43,9 +49,11 @@ func main() {
     api.Post("/ingredient", handlers.CreateIngredient)
 	api.Put("/update/ingredient/:id", handlers.UpdateIngredient)
 	api.Delete("/delete/ingredient/:id", handlers.DeleteIngredient)
-    api.Post("/addMeal", handlers.CreateMeal)
+    api.Post("/createMeal", handlers.CreateMeal)
+    api.Post("/addMeal", handlers.CreateDailyLog)
 
 
     // Start the server
+    fmt.Println("starting the server....")
     log.Fatal(app.Listen(":3000")) 
 }

@@ -3,7 +3,6 @@ package handlers
 import (
 	"calorie-tracker/models"
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,7 +16,6 @@ var dailyLogCollection *mongo.Collection
 
 func SetUpDailyLogCollection(client *mongo.Client) {
     dailyLogCollection = client.Database("calorieTracker").Collection("daily_logs")
-    fmt.Println(dailyLogCollection)
 }
 
 func CreateDailyLog(c *fiber.Ctx) error {

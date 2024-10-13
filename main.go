@@ -33,6 +33,7 @@ func main() {
     // Set up the user collection
     handlers.SetUpUserCollection(client)
 	handlers.SetUpIngredientCollection(client)
+    handlers.SetUpMealCollection(client)
 
     // Define routes
     app.Post("/register", handlers.Register)
@@ -42,6 +43,7 @@ func main() {
     api.Post("/ingredient", handlers.CreateIngredient)
 	api.Put("/update/ingredient/:id", handlers.UpdateIngredient)
 	api.Delete("/delete/ingredient/:id", handlers.DeleteIngredient)
+    api.Post("/addMeal", handlers.CreateMeal)
 
 
     // Start the server

@@ -18,14 +18,14 @@ var userCollection *mongo.Collection
 
 // SetUpUserCollection initializes the user collection
 func SetUpUserCollection(client *mongo.Client) {
-    userCollection = client.Database("your_database_name").Collection("users")
+    userCollection = client.Database("UserDatabase").Collection("users")
 }
 
 // Register creates a new user account
 func Register(c *fiber.Ctx) error {
     var user models.User
     if err := c.BodyParser(&user); err != nil {
-        return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid input"})
+        return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
     }
 
     // Check if the email already exists
@@ -62,7 +62,7 @@ func Login(c *fiber.Ctx) error {
     var dbUser models.User
     err := userCollection.FindOne(context.TODO(), bson.M{"email": user.Email}).Decode(&dbUser)
     if err != nil {
-        return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid credentials"})
+        return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"error": "user not found"})
     }
 
     // Compare hashed passwords

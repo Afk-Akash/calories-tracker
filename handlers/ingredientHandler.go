@@ -17,7 +17,7 @@ import (
 var ingredientCollection *mongo.Collection
 
 func SetUpIngredientCollection(client *mongo.Client) {
-    ingredientCollection = client.Database("calorieTracker").Collection("meals", &options.CollectionOptions{
+    ingredientCollection = client.Database("calorieTracker").Collection("ingredients", &options.CollectionOptions{
         WriteConcern: writeconcern.New(writeconcern.W(1)),
     })
 

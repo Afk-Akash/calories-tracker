@@ -3,7 +3,6 @@ package handlers
 import (
 	"calorie-tracker/models"
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -55,7 +54,7 @@ func CreateMeal(c *fiber.Ctx) error {
     // Insert the ingredient into MongoDB
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
-    fmt.Println(meal)
+
     _, err := mealCollection.InsertOne(ctx, meal)
     if err != nil {
         return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

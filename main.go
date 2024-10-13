@@ -1,13 +1,15 @@
 package main
 
 import (
-    "log"
 	"context"
+	"log"
 
-    "github.com/gofiber/fiber/v2"
-    "go.mongodb.org/mongo-driver/mongo"
-    "go.mongodb.org/mongo-driver/mongo/options"
-    "calorie-tracker/handlers" // Adjust this import path as necessary
+	"calorie-tracker/handlers" // Adjust this import path as necessary
+	"calorie-tracker/middlewares"
+
+	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
@@ -30,10 +32,17 @@ func main() {
 
     // Set up the user collection
     handlers.SetUpUserCollection(client)
+	handlers.SetUpIngredientCollection(client)
 
     // Define routes
     app.Post("/register", handlers.Register)
     app.Post("/login", handlers.Login)
+
+	api := app.Group("/api", middlewares.AuthMiddleware)
+    api.Post("/ingredient", handlers.CreateIngredient)
+	api.Put("/update/ingredient/:id", handlers.UpdateIngredient)
+	api.Delete("/delete/ingredient/:id", handlers.DeleteIngredient)
+
 
     // Start the server
     log.Fatal(app.Listen(":3000")) 

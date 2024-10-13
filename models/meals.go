@@ -7,7 +7,6 @@ type Meal struct {
     UserID       primitive.ObjectID `bson:"user_id" json:"user_id"`
     Name         string             `bson:"name" json:"name"`
     Ingredients  []Ingredient       `bson:"ingredients" json:"ingredients"`
-    TotalMacros  Macros             `bson:"total_macros" json:"total_macros"`
     TotalCalories float64           `bson:"total_calories" json:"total_calories"`
     CreatedAt    primitive.DateTime `bson:"created_at" json:"created_at"`
 }

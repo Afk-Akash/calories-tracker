@@ -24,15 +24,10 @@ func CreateMeal(c *fiber.Ctx) error {
     meal.ID = primitive.NewObjectID()
     meal.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 
-    // Calculate total macros and calories
-    totalMacros := models.Macros{}
-    for _, ingredient := range meal.Ingredients {
-        totalMacros.Protein += ingredient.Macros.Protein
-        totalMacros.Carbs += ingredient.Macros.Carbs
-        totalMacros.Fats += ingredient.Macros.Fats
-        meal.TotalCalories += ingredient.Calories
-    }
-    meal.TotalMacros = totalMacros
+    // // Calculate total macros and calories
+    // totalMacros := models.Macros{}
+
+    // meal.TotalMacros = totalMacros
 
     _, err := mealCollection.InsertOne(context.Background(), meal)
     if err != nil {

@@ -3,6 +3,8 @@ package handlers
 import (
 	"calorie-tracker/models"
 	"context"
+	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,6 +18,7 @@ var dailyLogCollection *mongo.Collection
 
 func SetUpDailyLogCollection(client *mongo.Client) {
     dailyLogCollection = client.Database("calorieTracker").Collection("daily_logs")
+    mealCollection     = client.Database("calorieTracker").Collection("meals")
 }
 
 func CreateDailyLog(c *fiber.Ctx) error {
@@ -29,6 +32,16 @@ func CreateDailyLog(c *fiber.Ctx) error {
 			"error": "Invalid request body",
 		})
 	}
+    mealJSON, err := json.MarshalIndent(meal, "", "  ") // Pretty print with indentation
+	if err != nil {
+		log.Printf("Error converting meal to JSON: %v", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to process meal data",
+		})
+	}
+
+	// Print the JSON to console
+	log.Println(string(mealJSON))
 
 	// Convert userID to MongoDB ObjectID
 	objectID, _ := primitive.ObjectIDFromHex(userID)
@@ -37,6 +50,7 @@ func CreateDailyLog(c *fiber.Ctx) error {
 	today := time.Now()
     todayDate := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location())
 
+    
 
 	// Create the query filter to find the document by user_id and today's date
 	filter := bson.M{
@@ -45,29 +59,33 @@ func CreateDailyLog(c *fiber.Ctx) error {
 	}
 
 	// Update operation: Add the meal to the "meals" array and increment the total macros
-	update := bson.M{
-		"$push": bson.M{"meals": meal}, // Push the new meal to the meals array
-		"$inc": bson.M{
-			"total_calories": meal.TotalCalories,
-			"total_protein":  meal.TotalProtien,
-			"total_carbs":    meal.TotalCarbs,
-			"total_fat":      meal.TotalFat,
-		},
-		"$setOnInsert": bson.M{ // Set these values only if the document is newly created
-			"user_id":  objectID,
-			"date":     primitive.NewDateTimeFromTime(time.Now()),
-			"created_at": primitive.NewDateTimeFromTime(time.Now()),
-		},
-	}
 
-	// Use the upsert option to create the document if it doesn't exist
+
 	opts := options.Update().SetUpsert(true)
 
-	// Perform the update operation
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := dailyLogCollection.UpdateOne(ctx, filter, update, opts)
+    var existingMeal models.Meal
+    mealCollection.FindOne(ctx, bson.M{"name": meal.Name, "user_id": objectID}).Decode(&existingMeal)
+    vv , _:= json.MarshalIndent(meal, "", "  ")
+    log.Println(string(vv))
+    update := bson.M{
+		"$push": bson.M{"meals": existingMeal}, // Push the new meal to the meals array
+		"$inc": bson.M{
+			"total_calories": existingMeal.TotalCalories,
+			"total_protein":  existingMeal.TotalProtien,
+			"total_carbs":    existingMeal.TotalCarbs,
+			"total_fat":      existingMeal.TotalFat,
+		},
+		"$setOnInsert": bson.M{ // Set these values only if the document is newly created
+			"user_id":  objectID,
+			"date":     todayDate,
+			"created_at": primitive.NewDateTimeFromTime(time.Now()),
+		},
+	}
+    
+	_, err = dailyLogCollection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to add meal, seems like database error...Please try again after some time",

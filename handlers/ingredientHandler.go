@@ -138,18 +138,14 @@ func UpdateIngredient(c *fiber.Ctx) error {
 }
 
 func DeleteIngredient(c *fiber.Ctx) error {
-	// Get the user from the context (optional)
 	user := c.Locals("user").(map[string]interface{})
 	userID := user["user_id"].(string)
 
-	// Get the ingredient ID from the URL parameters
 	ingredientID := c.Params("id")
 
-	// Create a context with timeout for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Convert the ingredient ID to ObjectID
 	objectId, err := primitive.ObjectIDFromHex(ingredientID)
 	userId, _ := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -178,7 +174,6 @@ func DeleteIngredient(c *fiber.Ctx) error {
 }
 
 func GetUserIngredients(c *fiber.Ctx) error {
-	// Get the user from the context (optional)
 	user := c.Locals("user").(map[string]interface{})
 	userID := user["user_id"].(string)
 
@@ -189,7 +184,6 @@ func GetUserIngredients(c *fiber.Ctx) error {
 		})
 	}
 
-	// Initialize a slice to hold the ingredients
 	var ListOfingredients []models.Ingredient
 
 	cursor, err := ingredientCollection.Find(context.TODO(), bson.M{"user_id": userObjectID})
@@ -201,13 +195,11 @@ func GetUserIngredients(c *fiber.Ctx) error {
 
 	defer cursor.Close(context.TODO()) // Ensure the cursor is closed
 
-	// Decode the cursor into the ListOfingredients slice
 	if err := cursor.All(context.TODO(), &ListOfingredients); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to decode ListOfingredients",
 		})
 	}
 
-	// Return the list of ListOfingredients as JSON
 	return c.Status(fiber.StatusOK).JSON(ListOfingredients)
 }

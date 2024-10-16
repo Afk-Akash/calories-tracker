@@ -52,6 +52,7 @@ func main() {
 	api.Post("/createMeal", handlers.CreateMeal)
 	api.Post("/addMeal", handlers.CreateDailyLog)
 	api.Get("/GetUserIngredients", handlers.GetUserIngredients)
+	api.Get("/getDailyLog", handlers.GetDailyLogs)
 
 	// Start the server
 	fmt.Println("starting the server....")

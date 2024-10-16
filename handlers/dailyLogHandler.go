@@ -32,27 +32,14 @@ func CreateDailyLog(c *fiber.Ctx) error {
 			"error": "Invalid request body",
 		})
 	}
-    mealJSON, err := json.MarshalIndent(meal, "", "  ") // Pretty print with indentation
-	if err != nil {
-		log.Printf("Error converting meal to JSON: %v", err)
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to process meal data",
-		})
-	}
 
-	// Print the JSON to console
-	log.Println(string(mealJSON))
-
-	// Convert userID to MongoDB ObjectID
 	objectID, _ := primitive.ObjectIDFromHex(userID)
 
-	// Get the current date (formatted as YYYY-MM-DD) to use as a unique identifier for the day
 	today := time.Now()
     todayDate := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location())
 
     
 
-	// Create the query filter to find the document by user_id and today's date
 	filter := bson.M{
 		"user_id": objectID,
 		"date":    primitive.NewDateTimeFromTime(todayDate),
@@ -68,24 +55,23 @@ func CreateDailyLog(c *fiber.Ctx) error {
 
     var existingMeal models.Meal
     mealCollection.FindOne(ctx, bson.M{"name": meal.Name, "user_id": objectID}).Decode(&existingMeal)
-    vv , _:= json.MarshalIndent(meal, "", "  ")
-    log.Println(string(vv))
+ 
     update := bson.M{
-		"$push": bson.M{"meals": existingMeal}, // Push the new meal to the meals array
+		"$push": bson.M{"meals": existingMeal}, 
 		"$inc": bson.M{
 			"total_calories": existingMeal.TotalCalories,
-			"total_protein":  existingMeal.TotalProtien,
+			"total_protien":  existingMeal.TotalProtien,
 			"total_carbs":    existingMeal.TotalCarbs,
 			"total_fat":      existingMeal.TotalFat,
 		},
-		"$setOnInsert": bson.M{ // Set these values only if the document is newly created
+		"$setOnInsert": bson.M{
 			"user_id":  objectID,
 			"date":     todayDate,
 			"created_at": primitive.NewDateTimeFromTime(time.Now()),
 		},
 	}
     
-	_, err = dailyLogCollection.UpdateOne(ctx, filter, update, opts)
+	_, err := dailyLogCollection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to add meal, seems like database error...Please try again after some time",
@@ -95,4 +81,48 @@ func CreateDailyLog(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Meal added successfully",
 	})
+}
+
+func GetDailyLogs(c *fiber.Ctx) error {
+	user := c.Locals("user").(map[string]interface{})
+	userID := user["user_id"].(string)
+
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID",
+		})
+	}
+
+	// Get the current date (midnight) to filter logs by date
+	today := time.Now()
+	todayDate := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location())
+
+	// Create the query filter for user_id and date
+	filter := bson.M{
+		"user_id": objectID,
+		"date":    primitive.NewDateTimeFromTime(todayDate),
+	}
+
+	// Find the daily log in the database
+	var dailyLog models.DailyLog
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	err = dailyLogCollection.FindOne(ctx, filter).Decode(&dailyLog)
+	vv , _:= json.MarshalIndent(dailyLog, "", "  ")
+    log.Println(string(vv))
+	if err == mongo.ErrNoDocuments {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "No log found for today",
+		})
+	} else if err != nil {
+		log.Printf("Database error: %v", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to retrieve daily log, seems like db error",
+		})
+	}
+
+	// Return the daily log as JSON
+	return c.Status(fiber.StatusOK).JSON(dailyLog)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"calorie-tracker/handlers" // Adjust this import path as necessary
 	"calorie-tracker/middlewares"
@@ -17,8 +18,14 @@ func main() {
 	// Create a new Fiber app
 	app := fiber.New()
 
+	mongoURI := os.Getenv("MONGO_URI")
+	if mongoURI == "" {
+		mongoURI = "mongodb://localhost:27017"
+	}
+
+	log.Println("trying to connect with mongo with url : ", mongoURI)
 	// MongoDB connection setup
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017") // Replace with your MongoDB URI
+	clientOptions := options.Client().ApplyURI(mongoURI) // Replace with your MongoDB URI
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
 		log.Fatalf("Could not connect to MongoDB: %v", err)

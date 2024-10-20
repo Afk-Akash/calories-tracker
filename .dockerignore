@@ -1,0 +1,16 @@
+main
+*.out
+
+*.test
+
+.git
+.gitignore
+
+.dockerignore
+Dockerfile
+docker-compose.yaml
+readme.md
+
+*.tmp
+.idea/
+.vscode/

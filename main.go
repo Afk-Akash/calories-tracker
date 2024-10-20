@@ -47,8 +47,8 @@ func main() {
 
 	api := app.Group("/api", middlewares.AuthMiddleware)
 	api.Post("/ingredient", handlers.CreateIngredient)
-	api.Put("/update/ingredient/:id", handlers.UpdateIngredient)
-	api.Delete("/delete/ingredient/:id", handlers.DeleteIngredient)
+	api.Post("/update/ingredient", handlers.UpdateIngredient)
+	api.Delete("/delete/ingredient", handlers.DeleteIngredient)
 	api.Post("/createMeal", handlers.CreateMeal)
 	api.Post("/addMeal", handlers.CreateDailyLog)
 	api.Get("/GetUserIngredients", handlers.GetUserIngredients)

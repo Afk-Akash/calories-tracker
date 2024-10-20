@@ -71,47 +71,35 @@ func CreateIngredient(c *fiber.Ctx) error {
 }
 
 func UpdateIngredient(c *fiber.Ctx) error {
-	// Get the ingredient ID from the URL parameters
-	ingredientID := c.Params("id")
-	if ingredientID == "" {
+
+	var ingredientBody models.Ingredient
+	if err := c.BodyParser(&ingredientBody); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Missing ingredient ID",
+			"error": "Invalid request body",
 		})
 	}
 
 	user := c.Locals("user").(map[string]interface{})
 	userID := user["user_id"].(string)
 
-	objectID, err := primitive.ObjectIDFromHex(ingredientID)
 	userId, _ := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid ingredient ID",
-		})
-	}
 
-	var existingIngredient, ingredient models.Ingredient
+	var existingIngredient models.Ingredient
 
-	err = ingredientCollection.FindOne(context.Background(), bson.M{"_id": objectID, "user_id": userId}).Decode(&existingIngredient)
+	err := ingredientCollection.FindOne(context.Background(), bson.M{"name": ingredientBody.Name, "user_id": userId}).Decode(&existingIngredient)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Ingredient not found or does not belong to the user",
 		})
 	}
 
-	if err := c.BodyParser(&ingredient); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
-	}
-
 	// Create an update document
 	update := bson.M{
 		"$set": bson.M{
-			"protein":  ingredient.Protein,
-			"carbs":    ingredient.Carbs,
-			"fat":      ingredient.Fat,
-			"calories": ingredient.Calories,
+			"protein":  ingredientBody.Protein,
+			"carbs":    ingredientBody.Carbs,
+			"fat":      ingredientBody.Fat,
+			"calories": ingredientBody.Calories,
 		},
 	}
 
@@ -119,7 +107,7 @@ func UpdateIngredient(c *fiber.Ctx) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	result, err := ingredientCollection.UpdateOne(ctx, bson.M{"_id": objectID}, update)
+	result, err := ingredientCollection.UpdateOne(ctx, bson.M{"_id": existingIngredient.ID}, update)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to update ingredient",
@@ -141,27 +129,30 @@ func DeleteIngredient(c *fiber.Ctx) error {
 	user := c.Locals("user").(map[string]interface{})
 	userID := user["user_id"].(string)
 
-	ingredientID := c.Params("id")
+	var ingredientBody models.Ingredient
+	if err := c.BodyParser(&ingredientBody); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	objectId, err := primitive.ObjectIDFromHex(ingredientID)
+	// objectId, err := primitive.ObjectIDFromHex(ingredientID)
 	userId, _ := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid ingredient ID",
-		})
-	}
 
-	result := ingredientCollection.FindOne(ctx, bson.M{"_id": objectId, "user_id": userId})
+	result := ingredientCollection.FindOne(ctx, bson.M{"name": ingredientBody.Name, "user_id": userId})
 	if result.Err() != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Ingredient not found",
 		})
 	}
+	var existingIngredient models.Ingredient
+	result.Decode(&existingIngredient)
 
-	_, err = ingredientCollection.DeleteOne(ctx, bson.M{"_id": objectId, "user_id": userId})
+	_, err := ingredientCollection.DeleteOne(ctx, bson.M{"_id": existingIngredient.ID, "user_id": userId})
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to delete ingredient",

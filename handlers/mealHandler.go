@@ -49,6 +49,18 @@ func CreateMeal(c *fiber.Ctx) error {
 		})
 	}
 
+	if meal.Name == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Field 'name' is required",
+		})
+	}
+
+	if meal.Ingredients == nil || len(meal.Ingredients) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Field 'ingredients' is required and cannot be empty",
+		})
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -69,10 +81,18 @@ func CreateMeal(c *fiber.Ctx) error {
 			})
 		}
 
-		totalCalories = totalCalories + meal.Ingredients[i].Calories
-		totalProtein = totalProtein + meal.Ingredients[i].Protein
-		totalCarbs = totalCarbs + meal.Ingredients[i].Carbs
-		totalFat = totalFat + meal.Ingredients[i].Fat
+		totalCalories = totalCalories + dbIngredient.Calories
+		meal.Ingredients[i].Calories = dbIngredient.Calories
+
+		totalProtein = totalProtein + dbIngredient.Protein
+		meal.Ingredients[i].Protein = dbIngredient.Protein
+
+		totalCarbs = totalCarbs + dbIngredient.Carbs
+		meal.Ingredients[i].Carbs = dbIngredient.Carbs
+
+		totalFat = totalFat + dbIngredient.Fat
+		meal.Ingredients[i].Fat = dbIngredient.Fat
+
 	}
 
 	meal.TotalCalories = totalCalories

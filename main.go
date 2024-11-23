@@ -57,10 +57,11 @@ func main() {
 	api.Post("/update/ingredient", handlers.UpdateIngredient)
 	api.Delete("/delete/ingredient", handlers.DeleteIngredient)
 	api.Post("/createMeal", handlers.CreateMeal)
-	api.Post("/update/meal", handlers.DeleteMeal)
+	api.Delete("/delete/meal", handlers.DeleteMeal)
 	api.Post("/addMeal", handlers.CreateDailyLog)
 	api.Get("/GetUserIngredients", handlers.GetUserIngredients)
 	api.Get("/getDailyLog", handlers.GetDailyLogs)
+	api.Delete("/delete/DailyLog/meal", handlers.DeleteMealFromDailyLog)
 
 	// Start the server
 	fmt.Println("starting the server....")

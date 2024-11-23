@@ -49,16 +49,34 @@ func CreateMeal(c *fiber.Ctx) error {
 		})
 	}
 
-	var totalCalories, totalFat, totalCarbs, totalProtien float64
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var totalCalories, totalFat, totalCarbs, totalProtein float64
 	for i := 0; i < len(meal.Ingredients); i++ {
+		var dbIngredient models.Ingredient
+		filter := bson.M{"name": meal.Ingredients[i].Name}
+		err := ingredientCollection.FindOne(ctx, filter).Decode(&dbIngredient)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"error":   "Ingredient not found in database",
+					"missing": meal.Ingredients[i].Name,
+				})
+			}
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Error while validating ingredient",
+			})
+		}
+
 		totalCalories = totalCalories + meal.Ingredients[i].Calories
-		totalProtien = totalProtien + meal.Ingredients[i].Protein
+		totalProtein = totalProtein + meal.Ingredients[i].Protein
 		totalCarbs = totalCarbs + meal.Ingredients[i].Carbs
 		totalFat = totalFat + meal.Ingredients[i].Fat
 	}
 
 	meal.TotalCalories = totalCalories
-	meal.TotalProtien = totalProtien
+	meal.TotalProtein = totalProtein
 	meal.TotalCarbs = totalCarbs
 	meal.TotalFat = totalFat
 
@@ -67,8 +85,6 @@ func CreateMeal(c *fiber.Ctx) error {
 	meal.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 
 	// Insert the ingredient into MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
 	_, err := mealCollection.InsertOne(ctx, meal)
 	if err != nil {

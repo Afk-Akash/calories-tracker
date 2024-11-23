@@ -61,7 +61,7 @@ func CreateIngredient(c *fiber.Ctx) error {
 	_, err := ingredientCollection.InsertOne(ctx, ingredient)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to add ingredient",
+			"error": "Failed to add ingredient, maybe ingredient with same name already exist",
 		})
 	}
 
@@ -135,7 +135,6 @@ func DeleteIngredient(c *fiber.Ctx) error {
 			"error": "Invalid request body",
 		})
 	}
-
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

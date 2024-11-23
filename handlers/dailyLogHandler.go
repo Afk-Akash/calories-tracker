@@ -199,7 +199,7 @@ func DeleteMealFromDailyLog(c *fiber.Ctx) error {
 	// Prepare the update to remove the meal and adjust the macros
 	update := bson.M{
 		"$pull": bson.M{
-			"meals": bson.M{"_id": req.LogID},
+			"meals": bson.M{"logID": req.LogID},
 		},
 		"$inc": bson.M{
 			"total_calories": -mealToDelete.TotalCalories,

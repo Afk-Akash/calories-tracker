@@ -1,0 +1,6 @@
+1. Remove the leading and trailling space from the name of the ingredient
+
+2. Validate all the request body before performing the action
+
+3. Create Request body and response body separately [refactoring]
+
